@@ -13,3 +13,4 @@ hyper = "1.7.0"
 tokio = { version = "1", features = ["full", "macros", "rt-multi-thread"] }
 serde = "1.0.228"
 tracing-subscriber = "0.3"
+tower = "0.5.3"

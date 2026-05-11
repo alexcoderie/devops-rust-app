@@ -280,6 +280,7 @@ dependencies = [
  "hyper",
  "serde",
  "tokio",
+ "tower",
  "tracing-subscriber",
 ]
 
