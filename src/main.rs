@@ -1,20 +1,4 @@
-use axum::{routing::get, Router};
-
-pub fn create_router() -> Router {
-    Router::new().route("/", get(root)).route("/health", get(health)).route("/version", get(version))
-}
-
-async fn root() -> &'static str {
-    "Hello from fly.io!"
-}
-
-async fn health() -> &'static str {
-    "ok"
-}
-
-async fn version() -> &'static str {
-    env!("CARGO_PKG_VERSION")
-}
+use router::create_router;
 
 #[tokio::main]
 async fn main() {
