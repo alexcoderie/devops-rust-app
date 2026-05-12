@@ -14,3 +14,13 @@ jobs:
         with:
           components: rustfmt
       - run: cargo fmt --check
+
+  clippy:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - run: cargo clippy -- -D warnings
