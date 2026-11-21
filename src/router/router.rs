@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-
 use axum::{Router, body::Body, extract::Query, http::Request, routing::get};
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tracing::Level;
