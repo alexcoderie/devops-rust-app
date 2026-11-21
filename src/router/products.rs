@@ -1,8 +1,4 @@
-use axum::{
-    Json,
-    extract::Path,
-    http::StatusCode,
-};
+use axum::{Json, extract::Path, http::StatusCode};
 use serde::Serialize;
 
 #[derive(Clone, Serialize)]

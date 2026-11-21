@@ -1,6 +1,7 @@
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use router::create_router;
+use std::collections::HashSet;
 use tower::util::ServiceExt;
 
 #[tokio::test]
@@ -131,10 +132,12 @@ async fn products_returns_json_list() {
     let products = products.as_array().unwrap();
 
     assert!(products.len() >= 3);
+    let mut ids = HashSet::new();
     for product in products {
         assert!(product["id"].is_u64());
         assert!(product["name"].is_string());
         assert!(product["price_cents"].is_u64());
+        assert!(ids.insert(product["id"].as_u64().unwrap()));
     }
 }
 
