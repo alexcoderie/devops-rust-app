@@ -1,0 +1,81 @@
+name: Ticket
+description: A unit of work for an agent, written like a contract. If it is vague, the result will be too.
+title: "[ticket] "
+labels: ["ticket"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: One or two sentences. What must be true when this ticket is done?
+      placeholder: "A visitor can list the products in the catalog at GET /products."
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Anything the agent cannot find in the repository (decisions, constraints, links).
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Each line must be checkable by a test or a command. No vague wording like "works well".
+      value: |
+        - [ ]
+        - [ ]
+        - [ ] `cargo fmt --check`, `cargo clippy --locked --all-targets -- -D warnings` and `cargo test --locked` all pass
+    validations:
+      required: true
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: In scope
+      description: Files, modules or endpoints the agent may change.
+      placeholder: "src/router/, tests/"
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope (do not touch)
+      description: What the agent must leave alone.
+      value: |
+        - .github/ (workflows, templates, instructions)
+        - deny.toml, rust-toolchain.toml, Dockerfile, fly.toml
+        - Cargo.toml dependencies, unless a new dependency is listed above and justified
+    validations:
+      required: true
+
+  - type: textarea
+    id: tests
+    attributes:
+      label: Tests required
+      description: Which behaviors need a test, including failure and abuse cases.
+    validations:
+      required: true
+
+  - type: textarea
+    id: security
+    attributes:
+      label: Security notes
+      description: Inputs to validate, data to protect, secrets involved, authentication or authorization rules.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: human-decisions
+    attributes:
+      label: Human decisions
+      description: Tick any that apply. An agent must stop and ask a human before doing these.
+      options:
+        - label: This ticket changes data destructively (drops, deletes, rewrites or migrates existing data)
+        - label: This ticket could raise spending above the cap
+        - label: This ticket changes how production is deployed
+
