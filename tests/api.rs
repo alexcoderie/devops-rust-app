@@ -71,3 +71,40 @@ async fn unknown_route_returns_404() {
 
     assert_eq!(response.status(), StatusCode::NOT_FOUND);
 }
+
+#[tokio::test]
+async fn echo_returns_message() {
+    let app = create_router();
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/echo?message=hello")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+        .await
+        .unwrap();
+    assert_eq!(&body[..], b"hello");
+}
+
+#[tokio::test]
+async fn echo_without_message_returns_fallback() {
+    let app = create_router();
+    let response = app
+        .oneshot(Request::builder().uri("/echo").body(Body::empty()).unwrap())
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+        .await
+        .unwrap();
+    assert_eq!(&body[..], b"No message provided!");
+}
