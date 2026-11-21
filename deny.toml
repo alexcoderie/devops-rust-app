@@ -1,0 +1,37 @@
+# cargo-deny policy, run in CI by the "Dependency audit" job.
+# Docs: https://embarkstudios.github.io/cargo-deny/
+
+[graph]
+all-features = true
+
+# Known vulnerabilities (RustSec) fail the build. If an advisory cannot be
+# fixed yet, list its id in `ignore` with a comment saying why and until when.
+[advisories]
+ignore = []
+
+# Only permissive licenses are allowed. A new license showing up in a pull
+# request is a decision for a human, so it is added here on purpose.
+[licenses]
+allow = [
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "MIT",
+    "Unicode-3.0",
+]
+confidence-threshold = 0.8
+
+# This application itself is never published, so it needs no license.
+[licenses.private]
+ignore = true
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+highlight = "all"
+
+# Crates may only come from crates.io, never from a git URL or a custom registry.
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

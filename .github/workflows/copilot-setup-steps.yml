@@ -1,0 +1,31 @@
+name: Copilot Setup Steps
+
+# Prepares the environment of the Copilot cloud agent so it can build and run
+# the tests. The job MUST be named `copilot-setup-steps`. The triggers below
+# only exist so this file is validated when it changes.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+permissions:
+  contents: read
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - run: rustup toolchain install
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fetch --locked
+

@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 
-use axum::{Router, extract::Query, routing::get};
+use axum::{Router, body::Body, extract::Query, http::Request, routing::get};
+use tower_http::trace::{DefaultOnResponse, TraceLayer};
+use tracing::Level;
 
 pub fn create_router() -> Router {
     Router::new()
@@ -8,6 +10,17 @@ pub fn create_router() -> Router {
         .route("/health", get(health))
         .route("/version", get(version))
         .route("/echo", get(echo))
+        .layer(
+            TraceLayer::new_for_http()
+                .make_span_with(|request: &Request<Body>| {
+                    tracing::info_span!(
+                        "request",
+                        method = %request.method(),
+                        path = %request.uri().path(),
+                    )
+                })
+                .on_response(DefaultOnResponse::new().level(Level::INFO)),
+        )
 }
 
 async fn root() -> &'static str {
