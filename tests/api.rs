@@ -108,3 +108,88 @@ async fn echo_without_message_returns_fallback() {
         .unwrap();
     assert_eq!(&body[..], b"No message provided!");
 }
+
+#[tokio::test]
+async fn products_returns_json_list() {
+    let app = create_router();
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/products")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+        .await
+        .unwrap();
+    let products: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    let products = products.as_array().unwrap();
+
+    assert!(products.len() >= 3);
+    for product in products {
+        assert!(product["id"].is_u64());
+        assert!(product["name"].is_string());
+        assert!(product["price_cents"].is_u64());
+    }
+}
+
+#[tokio::test]
+async fn product_id_returns_one_product() {
+    let app = create_router();
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/products/2")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::OK);
+
+    let body = axum::body::to_bytes(response.into_body(), usize::MAX)
+        .await
+        .unwrap();
+    let product: serde_json::Value = serde_json::from_slice(&body).unwrap();
+    assert_eq!(product["id"], 2);
+    assert_eq!(product["name"], "Mouse");
+    assert_eq!(product["price_cents"], 4999);
+}
+
+#[tokio::test]
+async fn unknown_product_id_returns_404() {
+    let app = create_router();
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/products/999")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::NOT_FOUND);
+}
+
+#[tokio::test]
+async fn non_numeric_product_id_returns_400() {
+    let app = create_router();
+    let response = app
+        .oneshot(
+            Request::builder()
+                .uri("/products/not-a-number")
+                .body(Body::empty())
+                .unwrap(),
+        )
+        .await
+        .unwrap();
+
+    assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+}

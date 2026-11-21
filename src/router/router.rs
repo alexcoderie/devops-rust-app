@@ -5,11 +5,15 @@ use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tracing::Level;
 
 pub fn create_router() -> Router {
+    use super::products;
+
     Router::new()
         .route("/", get(root))
         .route("/health", get(health))
         .route("/version", get(version))
         .route("/echo", get(echo))
+        .route("/products", get(products::list))
+        .route("/products/{id}", get(products::get))
         .layer(
             TraceLayer::new_for_http()
                 .make_span_with(|request: &Request<Body>| {
