@@ -1,0 +1,14 @@
+{
+  "action": "opened",
+  "pull_request": {
+    "number": 13,
+    "draft": true,
+    "merged": false,
+    "merged_by": null,
+    "user": { "login": "Copilot" },
+    "body": "Fixes #12\n\nInitial plan",
+    "head": { "ref": "copilot/ticket-list-products", "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+    "base": { "ref": "main" }
+  },
+  "sender": { "login": "Copilot", "type": "Bot" }
+}

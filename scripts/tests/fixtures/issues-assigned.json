@@ -1,0 +1,7 @@
+{
+  "action": "assigned",
+  "issue": { "number": 12, "state": "open", "state_reason": null },
+  "assignee": { "login": "Copilot", "type": "Bot" },
+  "sender": { "login": "alexcoderie", "type": "User" },
+  "repository": { "full_name": "octo/demo", "default_branch": "main" }
+}

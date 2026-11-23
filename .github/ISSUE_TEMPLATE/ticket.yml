@@ -48,6 +48,7 @@ body:
       description: What the agent must leave alone.
       value: |
         - .github/ (workflows, templates, instructions)
+        - scripts/ (kill switch and audit log)
         - deny.toml, rust-toolchain.toml, Dockerfile, fly.toml
         - Cargo.toml dependencies, unless a new dependency is listed above and justified
     validations:

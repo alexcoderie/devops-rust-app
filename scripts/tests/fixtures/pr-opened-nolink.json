@@ -1,0 +1,14 @@
+{
+  "action": "opened",
+  "pull_request": {
+    "number": 14,
+    "draft": true,
+    "merged": false,
+    "merged_by": null,
+    "user": { "login": "Copilot" },
+    "body": "Initial plan",
+    "head": { "ref": "copilot/other-work", "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+    "base": { "ref": "main" }
+  },
+  "sender": { "login": "Copilot", "type": "Bot" }
+}

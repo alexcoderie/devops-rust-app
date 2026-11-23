@@ -10,7 +10,8 @@ changes to data. Everything else goes through the pipeline.
 - `src/main.rs`: binary entry point (logging, port, graceful shutdown)
 - `src/router/`: the library crate `router` (all routes live here, so they can be tested)
 - `tests/`: integration tests that call the router directly
-- `.github/workflows/`: CI and deploy. **Do not edit.**
+- `.github/workflows/`: CI, deploy and the audit log. **Do not edit.**
+- `scripts/`: the kill switch and the audit log (with their tests). **Do not edit.**
 
 ## Commands (run all three before opening a pull request)
 
@@ -27,8 +28,9 @@ Always pass `--locked`. Never edit `Cargo.lock` by hand.
 - Do exactly what the ticket asks, nothing more. Keep the pull request small.
 - Reference the ticket in the pull request description with `Closes #<number>`.
 - Every change needs tests, including failure and abuse cases (bad input, missing input).
-- Do not modify `.github/`, `deny.toml`, `rust-toolchain.toml`, `Dockerfile` or
-  `fly.toml` unless the ticket explicitly says so. If a check fails and the
+- Do not modify `.github/`, `scripts/`, `deny.toml`, `rust-toolchain.toml`, `Dockerfile` or
+  `fly.toml` unless the ticket explicitly says so. `scripts/` holds the kill switch and
+  the audit log: never change them, never disable or skip their tests. If a check fails and the
   "fix" would be weakening a check, stop and say so in the pull request instead.
 - Do not add or upgrade a dependency unless the ticket asks for it. State why in
   the pull request. `cargo deny check` must keep passing.
