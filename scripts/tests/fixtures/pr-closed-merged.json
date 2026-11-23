@@ -1,0 +1,14 @@
+{
+  "action": "closed",
+  "pull_request": {
+    "number": 13,
+    "draft": false,
+    "merged": true,
+    "merged_by": { "login": "alexcoderie" },
+    "user": { "login": "Copilot" },
+    "body": "Closes #12",
+    "head": { "ref": "copilot/ticket-list-products", "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" },
+    "base": { "ref": "main" }
+  },
+  "sender": { "login": "alexcoderie", "type": "User" }
+}

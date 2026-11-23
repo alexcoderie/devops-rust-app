@@ -1,0 +1,39 @@
+name: Audit Log
+
+on:
+  issues:
+    types: [opened, closed, reopened, assigned, unassigned]
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review, closed]
+  workflow_run:
+    workflows: ["Build and Test", "Fly Deploy"]
+    types: [completed]
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  record:
+    name: Record event
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      issues: read
+      pull-requests: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          fetch-depth: 1
+          persist-credentials: true
+      - name: Write audit line
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          line="$(bash scripts/audit-record.sh)"
+          echo "$line"
+          bash scripts/audit-append.sh "$line"

@@ -1,0 +1,159 @@
+#!/usr/bin/env bash
+# Test double for the GitHub CLI. It simulates just enough of GitHub for the
+# scripts under test. State lives in $GH_STUB_DIR; every call is appended to
+# $GH_STUB_DIR/calls.log so tests can assert on what was (and was not) called.
+#
+# State files:
+#   actions_enabled        "true" | "false"
+#   allowed_actions        e.g. "selected"
+#   runs_<status>          one run id per line (queued, in_progress, ...)
+#   stuck_<id>             run ignores `cancel` but obeys `force-cancel`
+#   unkillable_<id>        run ignores both
+#   issues.json            JSON array shaped like GET /repos/{r}/issues
+#   reject_login_<login>   DELETE assignees with that login fails
+#   pr_<n>.json            output of `gh pr view <n> --json ...`
+#   commit_pulls_<sha>.json  response of GET /commits/<sha>/pulls
+#   approvals_<id>.json    response of GET /actions/runs/<id>/approvals
+set -euo pipefail
+
+dir="${GH_STUB_DIR:?GH_STUB_DIR must be set}"
+echo "$*" >>"$dir/calls.log"
+
+cmd="${1:-}"
+shift || true
+
+case "$cmd" in
+  auth)
+    [ -z "${GH_STUB_UNAUTH:-}" ]
+    exit
+    ;;
+  repo)
+    echo "${GH_STUB_REPO:-octo/demo}"
+    exit 0
+    ;;
+  issue)
+    echo "https://github.com/${GH_STUB_REPO:-octo/demo}/issues/999"
+    exit 0
+    ;;
+  pr)
+    # gh pr view <n> --repo <r> --json ...
+    f="$dir/pr_${2:-}.json"
+    if [ -f "$f" ]; then cat "$f"; exit 0; fi
+    echo "no pull request found" >&2
+    exit 1
+    ;;
+  api) ;;
+  *)
+    echo "gh stub: unsupported command: $cmd" >&2
+    exit 1
+    ;;
+esac
+
+method=GET
+jqexpr=""
+endpoint=""
+fields=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -X) method="$2"; shift 2 ;;
+    --jq | -q) jqexpr="$2"; shift 2 ;;
+    --silent | --paginate) shift ;;
+    -f | -F) fields+=("$2"); shift 2 ;;
+    *)
+      if [ -z "$endpoint" ]; then endpoint="$1"; fi
+      shift
+      ;;
+  esac
+done
+
+reply() {
+  if [ -n "$jqexpr" ]; then printf '%s' "$1" | jq -r "$jqexpr"; else printf '%s\n' "$1"; fi
+}
+field() { # value of a -f/-F field by key
+  local f
+  for f in "${fields[@]+"${fields[@]}"}"; do
+    if [ "${f%%=*}" = "$1" ]; then printf '%s' "${f#*=}"; return 0; fi
+  done
+  return 1
+}
+# The script under test cancels runs eight at a time, so state changes must be atomic.
+drop_run() {
+  (
+    flock 9
+    local f
+    for f in "$dir"/runs_*; do
+      [ -f "$f" ] || continue
+      grep -vx "$1" "$f" >"$f.tmp.$$" || true
+      mv "$f.tmp.$$" "$f"
+    done
+  ) 9>"$dir/.lock"
+}
+
+case "$method $endpoint" in
+  "GET "*/actions/permissions)
+    if [ "$(cat "$dir/actions_enabled")" = "true" ]; then
+      reply "{\"enabled\": true, \"allowed_actions\": \"$(cat "$dir/allowed_actions")\"}"
+    else
+      reply '{"enabled": false}'
+    fi
+    ;;
+  "PUT "*/actions/permissions)
+    field enabled >"$dir/actions_enabled"
+    if allowed="$(field allowed_actions)"; then printf '%s' "$allowed" >"$dir/allowed_actions"; fi
+    ;;
+  "GET "*/actions/runs\?status=*)
+    # GH_STUB_LIST_FAIL=1 simulates GitHub refusing to list runs once Actions is off
+    if [ -n "${GH_STUB_LIST_FAIL:-}" ] && [ "$(cat "$dir/actions_enabled")" = "false" ]; then
+      echo "gh: Actions is disabled for this repository (HTTP 403)" >&2
+      exit 1
+    fi
+    status="${endpoint#*status=}"
+    status="${status%%&*}"
+    file="$dir/runs_$status"
+    [ -f "$file" ] || : >"$file"
+    reply "$(jq -Rn --arg s "$status" '[inputs | select(length > 0) | {id: tonumber, status: $s}] | {total_count: length, workflow_runs: .}' <"$file")"
+    ;;
+  "POST "*/actions/runs/*/cancel)
+    id="${endpoint%/cancel}"
+    id="${id##*/}"
+    if [ ! -f "$dir/stuck_$id" ] && [ ! -f "$dir/unkillable_$id" ]; then drop_run "$id"; fi
+    ;;
+  "POST "*/actions/runs/*/force-cancel)
+    id="${endpoint%/force-cancel}"
+    id="${id##*/}"
+    if [ ! -f "$dir/unkillable_$id" ]; then drop_run "$id"; fi
+    ;;
+  "GET "*/actions/runs/*/approvals)
+    id="${endpoint%/approvals}"
+    id="${id##*/}"
+    if [ -f "$dir/approvals_$id.json" ]; then reply "$(cat "$dir/approvals_$id.json")"; else reply '[]'; fi
+    ;;
+  "GET "*/issues\?*)
+    reply "$(cat "$dir/issues.json")"
+    ;;
+  "DELETE "*/issues/*/assignees)
+    n="${endpoint%/assignees}"
+    n="${n##*/}"
+    login="$(field 'assignees[]')"
+    if [ -f "$dir/reject_login_$login" ]; then
+      echo "gh: Validation Failed (HTTP 422)" >&2
+      exit 1
+    fi
+    (
+      flock 9
+      jq --argjson n "$n" --arg l "$login" \
+        'map(if .number == $n then .assignees |= map(select(.login != $l)) else . end)' \
+        "$dir/issues.json" >"$dir/issues.json.tmp.$$"
+      mv "$dir/issues.json.tmp.$$" "$dir/issues.json"
+    ) 9>"$dir/.lock"
+    ;;
+  "GET "*/commits/*/pulls)
+    sha="${endpoint%/pulls}"
+    sha="${sha##*/}"
+    if [ -f "$dir/commit_pulls_$sha.json" ]; then reply "$(cat "$dir/commit_pulls_$sha.json")"; else reply '[]'; fi
+    ;;
+  *)
+    echo "gh stub: unsupported api call: $method $endpoint" >&2
+    exit 1
+    ;;
+esac

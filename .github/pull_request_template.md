@@ -19,4 +19,4 @@ Closes #
 - [ ] Every acceptance criterion in the ticket is covered by a test or a command
 - [ ] No secrets, tokens or credentials in the diff, logs or prompts
 - [ ] No dependency added or changed that the ticket did not ask for
-- [ ] Nothing outside the ticket's scope was touched (especially `.github/`, `deny.toml`, `Dockerfile`, `fly.toml`)
+- [ ] Nothing outside the ticket's scope was touched (especially `.github/`, `scripts/`, `deny.toml`, `Dockerfile`, `fly.toml`)

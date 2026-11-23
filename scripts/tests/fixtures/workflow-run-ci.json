@@ -1,0 +1,16 @@
+{
+  "action": "completed",
+  "workflow_run": {
+    "id": 778,
+    "name": "Build and Test",
+    "event": "pull_request",
+    "conclusion": "failure",
+    "run_attempt": 1,
+    "head_branch": "copilot/ticket-list-products",
+    "head_sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "pull_requests": [{ "number": 13 }],
+    "actor": { "login": "Copilot" },
+    "triggering_actor": { "login": "alexcoderie" }
+  },
+  "sender": { "login": "alexcoderie", "type": "User" }
+}
